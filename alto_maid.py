@@ -1,20 +1,21 @@
-import pandas as pd
-import streamlit as st
-import numpy as np
-from datetime import datetime
+# import library
+import pandas as pd #data manipulate
+import streamlit as st #web abb (Dashboard (DB))
+import numpy as np # function (math,arrays)
+from datetime import datetime # handle with time
 import datetime
-import altair as alt
-from openpyxl import load_workbook
-import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px
-import plotly.graph_objs as go
-import re
-import seaborn as sns
-import warnings
-import calendar
-warnings.filterwarnings('ignore')
+import altair as alt # visualized (DB)
+from openpyxl import load_workbook # excel
+import matplotlib.pyplot as plt # visualized
+import seaborn as sns # visualized
+import plotly.express as px # ***visualized
+import plotly.graph_objs as go # visualized
+import seaborn as sns # visualized
+import warnings  
+warnings.filterwarnings('ignore') # ignore warning
+import calendar #datetime
 
+#layout
 st.set_page_config(
     page_title="Alto_maid",
     layout = 'wide',
@@ -22,7 +23,7 @@ st.set_page_config(
 st.markdown('# AtMind Group')
 st.title('Alto')
 
-
+# Uploadfile excel
 uploaded_files = st.file_uploader("Choose a excel file", type='xlsx', accept_multiple_files=True)
 if uploaded_files:
     all= []
@@ -30,30 +31,35 @@ if uploaded_files:
     for uploaded_file in uploaded_files:
         try:
             for uploaded_file in uploaded_files:
-                df = pd.read_excel(uploaded_file,sheet_name='amenity_records',skiprows=[0])
+                df = pd.read_excel(uploaded_file,sheet_name='amenity_records',skiprows=[0]) #read sheet name = '' , skiprows 
                 df1 = pd.read_excel(uploaded_file,sheet_name='work_orders - work_order',skiprows=[0])
-                all.append(df)
-                all1.append(df1)
+                all.append(df) # append to list
+                all1.append(df1)  # append to list
         except Exception as e:
             pass
+   # tab 
     amen , perform00,resoures = st.tabs(['**Amenity**','**Performace**','**Resouces**'])
+    #amen
     with amen:
         if all:
-            all = pd.concat(all)
+            all = pd.concat(all) # convert list to DataFrame
             def perform(all) :
-                all = all.fillna(0)
-                all['time_stamp'] = pd.to_datetime(all['time_stamp'])
-                all[['created_at','updated_at']] = all[['created_at','updated_at']].apply(pd.to_datetime)               
-                all['time_of_day'] = pd.NA
-                all.loc[all['time_stamp'].dt.hour >= 12, 'time_of_day'] = 'Afternoon'
+                all = all.fillna(0) # fill nan
+                all['time_stamp'] = pd.to_datetime(all['time_stamp']) # astype datetime
+                all[['created_at','updated_at']] = all[['created_at','updated_at']].apply(pd.to_datetime)      # astype datetime         
+                all['time_of_day'] = pd.NA # create NAN columns
+                all.loc[all['time_stamp'].dt.hour >= 12, 'time_of_day'] = 'Afternoon' #To find time of day
                 all.loc[all['time_stamp'].dt.hour < 12, 'time_of_day'] = 'Morning'
+                # rename
                 all = all.rename(columns={'amenities_กาแฟ': 'complimentary_กาแฟ',
                             'amenities_น้ำตาล': 'complimentary_น้ำตาล',
                             'amenities_ครีมเทียม': 'complimentary_ครีมเทียม',
                             'amenities_ชา': 'complimentary_ชา'})
+                # To find Time, Date, Month
                 all['Time'] = all['time_stamp'].dt.time
                 all['Date'] = all['time_stamp'].dt.date
                 all['Month'] = all['time_stamp'].dt.month
+                # arrange col
                 desired_order = ['Date','Time','time_of_day','floor_name','room_name','complimentary_กาแฟ', 'complimentary_น้ำตาล', 'complimentary_ครีมเทียม',
                     'complimentary_ชา', 'amenities_แชมพู', 'amenities_สบู่ล้างมือ', 'amenities_ครีมอาบน้ำ',
                     'amenities_ชุดแปรงฟัน', 'amenities_หมวกคลุมผม', 'amenities_คัทเติ้ลบัช', 'amenities_น้ำดื่ม',
@@ -61,13 +67,15 @@ if uploaded_files:
                     'amenities_ทิชชูเช็ดหน้า', 'amenities_ทิชชูม้วน', 'amenities_ถุงขยะดำ_18x20', 'linen_ผ้าปูเตียง',
                     'linen_ปลอกผ้าดูเว้', 'linen_ปลอกหมอน', 'linen_ผ้าเช็ดตัว', 'linen_ผ้าเช็ดมือ',
                     'linen_ผ้าเช็ดเท้า', 'linen_เสื้อคลุมอาบน้ำ']
+                # set in dex
                 all = all.set_index('work_order_id')
+                # rearrange col
                 all = all.reindex(columns=desired_order)
-                all['complimentary_sum'] = all.filter(like='complimentary_').sum(axis=1)
+                all['complimentary_sum'] = all.filter(like='complimentary_').sum(axis=1) #crete new col by condition (SUM)
                 all['amenities_sum'] = all.filter(like='amenities_').sum(axis=1)
                 all['linen_sum'] = all.filter(like='linen_').sum(axis=1)
                 return all
-
+            # perform data
             all2 =  perform(all)
 
             #lis_t =['complimentary_กาแฟ', 'complimentary_น้ำตาล', 'complimentary_ครีมเทียม',
@@ -78,12 +86,14 @@ if uploaded_files:
             #     'linen_ปลอกผ้าดูเว้', 'linen_ปลอกหมอน', 'linen_ผ้าเช็ดตัว', 'linen_ผ้าเช็ดมือ',
             #     'linen_ผ้าเช็ดเท้า', 'linen_เสื้อคลุมอาบน้ำ']
             month_order = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+            # filtered datetime
             col1,col2 = st.columns(2)
             with col1:
                     start_date = st.date_input('Select a start date', value=all2['Date'].min())
             with col2:
                     end_date = st.date_input('Select an end date', value=all2['Date'].max())
             all2 = all2[(all2['Date'] >= pd.Timestamp(start_date)) & (all2['Date'] <= pd.Timestamp(end_date))]
+            # visual
             col1 , col2 = st.columns([1,3])
             with col1 :
                     list1 = ['complimentary_sum', 'amenities_sum', 'linen_sum']
@@ -182,9 +192,11 @@ if uploaded_files:
                     fig.update_layout(title='Linen')
                     fig.update_layout(legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1))
                     st.plotly_chart(fig,use_container_width=True)
+    # performance
     with perform00 :
         if all1:
             all1 = pd.concat(all1)
+            #mapping id to person
             assigned_by_id_mapping = {
                 850.0: 'amberadmin',
                 922.0: 'amberadmin',
@@ -218,7 +230,7 @@ if uploaded_files:
             assigned_by_id_values = [850.0,922.0, 1067.0, 1069.0, 1070.0, 1071.0, 1073.0, 1074.0, 1075.0, 1076.0, 1077.0, 1078.0, 1079.0, 1080.0, 1082.0, 1084.0, 1085.0, 1086.0, 1090.0, 1091.0, 1108.0, 1131.0, 1185.0, 1186.0, 1194.0, 1195.0, 1196.0, 1198.0]
 
             assigned_by_id_mapped = [assigned_by_id_mapping.get(value, value) for value in assigned_by_id_values]
-
+            # mapping id to role
             assigned_by_id_mapping1 = { 850: "Owner",
                 922: "Owner",
                 1: "Super User",
@@ -253,7 +265,8 @@ if uploaded_files:
             assigned_by_id_values = [850.0,922.0, 1067.0, 1069.0, 1070.0, 1071.0, 1073.0, 1074.0, 1075.0, 1076.0, 1077.0, 1078.0, 1079.0, 1080.0, 1082.0, 1084.0, 1085.0, 1086.0, 1090.0, 1091.0, 1108.0, 1131.0, 1185.0, 1186.0, 1194.0, 1195.0, 1196.0, 1198.0]
 
             assigned_by_id_mapped1 = [assigned_by_id_mapping1.get(value, value) for value in assigned_by_id_values]
-
+            
+            # create new col by condition
             def determine_worktype(title):
                 if "Touch Up" in title:
                     return "Touch Up", title.split()[-1]
@@ -261,7 +274,7 @@ if uploaded_files:
                     return "Cleaning", title.split()[0]
                 else:
                     return "Workorder", title
-            
+            # cal timetaken
             def timetaken(row):
                     if pd.notna(row['continue_at']) and pd.notna(row['pause_at']):
                         if pd.notna(row['cleaning_finished_at']):
@@ -274,26 +287,27 @@ if uploaded_files:
                         return (row['end_at'] - row['started_at']).total_seconds()/60
                     else:
                         return np.nan
-                
+            # performdata    
             def perform1(all1):
                 all1 = all1[['id','assigned_by_id','assigned_to_id','created_by_id','status','report_urgent','title','description','room_id','cleaning_type','started_at','end_at','cleaning_finished_at','continue_at','pause_at','report_type_id']]
-                all1[['started_at','end_at','cleaning_finished_at','pause_at','continue_at']] = all1[['started_at','end_at','cleaning_finished_at','pause_at','continue_at']].apply(pd.to_datetime)
-                all1['role_created_by'] = all1['created_by_id'].map(assigned_by_id_mapping1)
+                all1[['started_at','end_at','cleaning_finished_at','pause_at','continue_at']] = all1[['started_at','end_at','cleaning_finished_at','pause_at','continue_at']].apply(pd.to_datetime) # astype
+                all1['role_created_by'] = all1['created_by_id'].map(assigned_by_id_mapping1) # mapping
                 all1['role_assigned_by'] = all1['assigned_by_id'].map(assigned_by_id_mapping1)
                 all1['role_assigned_to'] = all1['assigned_to_id'].map(assigned_by_id_mapping1)
                 all1['assigned_by'] = all1['assigned_by_id'].map(assigned_by_id_mapping)
                 all1['assigned_to'] = all1['assigned_to_id'].map(assigned_by_id_mapping)
                 all1['created_by'] = all1['created_by_id'].map(assigned_by_id_mapping)
-                all1[['assigned_by_id', 'assigned_to_id', 'created_by_id']] = all1[['assigned_by_id', 'assigned_to_id', 'created_by_id']].astype(str).applymap(lambda x: x.replace('\t', ' '))
-                all1['worktype'], all1['workdes'] = zip(*all1['title'].apply(lambda x: determine_worktype(x)))
+                all1[['assigned_by_id', 'assigned_to_id', 'created_by_id']] = all1[['assigned_by_id', 'assigned_to_id', 'created_by_id']].astype(str).applymap(lambda x: x.replace('\t', ' ')) # replace string
+                all1['worktype'], all1['workdes'] = zip(*all1['title'].apply(lambda x: determine_worktype(x))) # create col by func
                 all1['cleaning_finished_at'] = all1['cleaning_finished_at'].fillna(np.nan)
-                all1['timetaken'] = all1.apply(timetaken, axis=1)
+                all1['timetaken'] = all1.apply(timetaken, axis=1) # cal tijmetaken
                 all1 = all1[['id','worktype','workdes','cleaning_type','status','report_urgent','assigned_by','role_assigned_by','assigned_to','role_assigned_to','created_by','role_created_by','timetaken','started_at','pause_at','continue_at','cleaning_finished_at','end_at','report_type_id']]
-                all1= all1[all1['timetaken'] > 0]
-                all1[['id','report_type_id']] = all1[['id','report_type_id']].astype(str)
+                all1= all1[all1['timetaken'] > 0] # filter value > 0
+                all1[['id','report_type_id']] = all1[['id','report_type_id']].astype(str) # astype
                 return all1
-
+            #performdata
             all3 =  perform1(all1)
+            # filter started_at
             col1, col2 = st.columns(2)
             with col1:
                 start_date = st.date_input('Select a start date', value=pd.to_datetime(all3['started_at'].min()).date())
@@ -304,19 +318,24 @@ if uploaded_files:
             end_timestamp = pd.Timestamp(end_date, tz='UTC')
 
             all3 = all3[(all3['started_at'] >= start_timestamp) & (all3['started_at'] <= end_timestamp)]
+            #show data
             st.write(all3)
-
+            
             total_t,co,od,vc = st.tabs(['**All type**','**C/O**','**OD**','**VC**'])
             with total_t:
                 all3_c =all3.copy()
+                # TO find percentile
                 all3_c['percentile'] = all3_c['timetaken'].rank(pct=True)
+                # filtered Percentile
                 min_val, max_val = float(all3_c['percentile'].min()), float(all3_c['percentile'].max())
                 tk_min, tk_max = st.slider('Select a range of Q', min_val, max_val, (min_val, max_val))
                 all3_c = all3_c[(all3_c['percentile'] >= tk_min) & (all3_c['percentile'] <= tk_max)]
+                #show box
                 fig = px.box(all3_c, x="timetaken", points="all", hover_data=all3_c.columns)
                 fig.update_layout(xaxis_title="Cleaning Type", yaxis_title="Time Taken")
                 st.plotly_chart(fig, use_container_width=True)
                 c1, c2, c3 = st.columns([1, 1.5, 1])
+                # stat
                 c2.write(all3_c[['timetaken']].describe().T, use_container_width=True)
             with co:
                 co_df = all3.copy()
@@ -328,8 +347,10 @@ if uploaded_files:
                 fig = px.box(co_df, x="timetaken", points="all", hover_data=co_df.columns)
                 fig.update_layout(xaxis_title="Cleaning Type", yaxis_title="Time Taken")
                 st.plotly_chart(fig, use_container_width=True)
+                #To count stared_at by date
                 grouped = co_df.groupby(co_df['started_at'].dt.date).size().reset_index(name='count')
                 fig = px.bar(grouped, x='started_at', y='count', text_auto=True)
+                #To count maid that maked
                 grouped1 = co_df.groupby(co_df['assigned_to']).size().reset_index(name='count')
                 grouped1 = grouped1.sort_values('count', ascending=False)
                 fig1 = px.bar(grouped1, x='assigned_to', y='count',color='assigned_to')
@@ -457,6 +478,7 @@ if uploaded_files:
             fig.update_layout(yaxis=dict(tickformat=".0f"))
 
             st.plotly_chart(fig, use_container_width=True)
+    # resoures
     with resoures:
         resoures_df = perform1(all1)
         col1,col2 = st.columns(2)
@@ -468,6 +490,7 @@ if uploaded_files:
         end_timestamp = pd.Timestamp(end_date, tz='UTC')
         resoures_df = resoures_df[(resoures_df['started_at'] >= start_timestamp) & (resoures_df['started_at'] <= end_timestamp)]
         resoures_df = resoures_df[resoures_df["cleaning_type"] != "DND"]
+        # pivot and visual
         www,mmm,yyy = st.tabs(['**weekly**','**monthly**','**yearly**'])
         with mmm:
             grouped = resoures_df.groupby([resoures_df['started_at'].dt.date,resoures_df['assigned_to']])['timetaken'].mean().reset_index(name='mean')
